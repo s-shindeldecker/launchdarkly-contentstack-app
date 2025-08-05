@@ -2,17 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "src": "dist/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/index.js",
       "dest": "/index.js"
+    },
+    {
+      "src": "/index.js.LICENSE.txt",
+      "dest": "/index.js.LICENSE.txt"
     },
     {
       "src": "/(.*)",
