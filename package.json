@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --mode production",
+    "vercel-build": "npm run build",
     "dev": "webpack --mode development --watch",
     "start": "webpack serve --mode development"
   },
