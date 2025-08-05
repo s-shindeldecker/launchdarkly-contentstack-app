@@ -2,41 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "dist/**",
+      "src": "dist/index.html",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/index.js",
-      "dest": "/index.js"
-    },
-    {
-      "src": "/index.js.LICENSE.txt",
-      "dest": "/index.js.LICENSE.txt"
+      "dest": "/dist/index.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        }
-      ]
+      "dest": "/dist/index.html"
     }
   ]
 } 
