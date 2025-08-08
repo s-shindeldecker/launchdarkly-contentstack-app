@@ -11,6 +11,10 @@
   ],
   "routes": [
     {
+      "src": "/flag-selector.html",
+      "dest": "/flag-selector.html"
+    },
+    {
       "src": "/index.js",
       "dest": "/index.js"
     },

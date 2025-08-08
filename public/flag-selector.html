@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaunchDarkly Flag Variation Field</title>
+    <style>
+        /* Reset styles for iframe compatibility */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: transparent;
+            overflow: hidden;
+        }
+        
+        #root {
+            width: 100%;
+            height: 100vh;
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        // Confirmation message that the wrapper is being loaded
+        console.log('🚀 LaunchDarkly Flag Selector wrapper loaded');
+        
+        // Ensure the React app loads properly in Contentstack's iframe
+        window.addEventListener('load', function() {
+            console.log('✅ Flag selector wrapper ready for React app');
+        });
+    </script>
+</body>
+</html> 

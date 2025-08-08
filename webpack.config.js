@@ -25,8 +25,15 @@ module.exports = {
     ],
   },
   plugins: [
+    // Original HTML for development/testing
     new HtmlWebpackPlugin({
       template: './public/index.html',
+      filename: 'index.html',
+    }),
+    // New HTML wrapper for Contentstack
+    new HtmlWebpackPlugin({
+      template: './public/flag-selector.html',
+      filename: 'flag-selector.html',
     }),
   ],
   devServer: {

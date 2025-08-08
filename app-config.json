@@ -1,11 +1,12 @@
 {
   "name": "LaunchDarkly Flag Variation Field",
+  "host": "https://launchdarkly-contentstack-app.vercel.app",
   "description": "Custom field extension for mapping Contentstack entries to LaunchDarkly flag variations",
   "version": "1.0.0",
   "author": "Your Name",
   "email": "your.email@example.com",
   "website": "https://your-website.com",
-  "repository": "https://github.com/your-username/launchdarkly-contentstack-app",
+  "repository": "https://github.com/s-shindeldecker/launchdarkly-contentstack-app",
   "keywords": [
     "contentstack",
     "launchdarkly",
@@ -30,15 +31,13 @@
     ]
   },
   "framework": "react",
-  "entry": "index.js",
-  "host": "https://your-app-domain.com",
+  "entry": "flag-selector.html",
   "oauth": {
     "client_id": "your-client-id",
     "client_secret": "your-client-secret",
     "scopes": [
-      "content_management_api.content_types.read",
-      "content_management_api.entries.read",
-      "content_management_api.entries.write"
+      "cm.content-type:read",
+      "cm.content-types.management:read"
     ]
   },
   "webhooks": [],
