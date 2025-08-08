@@ -37,6 +37,11 @@ module.exports = {
       template: './public/flag-selector.html',
       filename: 'flag-selector.html',
     }),
+    // Config screen wrapper
+    new HtmlWebpackPlugin({
+      template: './public/config-screen.html',
+      filename: 'config-screen.html',
+    }),
     // Make environment variables available to the app
     new webpack.DefinePlugin({
       'process.env.LAUNCHDARKLY_API_KEY': JSON.stringify(process.env.LAUNCHDARKLY_API_KEY),

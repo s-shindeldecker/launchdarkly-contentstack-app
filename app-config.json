@@ -28,6 +28,14 @@
           "placeholder": "Select a flag and variation"
         }
       }
+    ],
+    "config_screen": [
+      {
+        "type": "config-screen",
+        "src": "/config-screen.html",
+        "uid": "launchdarkly_config",
+        "title": "LaunchDarkly Settings"
+      }
     ]
   },
   "framework": "react",
