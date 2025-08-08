@@ -7,16 +7,17 @@
       "config": {
         "distDir": "dist"
       }
-    },
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
     }
   ],
+  "functions": {
+    "api/launchdarkly.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "src": "/api/launchdarkly",
+      "dest": "/api/launchdarkly.js"
     },
     {
       "src": "/flag-selector.html",
