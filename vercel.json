@@ -13,14 +13,6 @@
       "use": "@vercel/node"
     }
   ],
-  "functions": {
-    "api/launchdarkly.mjs": {
-      "runtime": "nodejs18.x"
-    },
-    "api/test.mjs": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "routes": [
     {
       "src": "/api/(.*)",
