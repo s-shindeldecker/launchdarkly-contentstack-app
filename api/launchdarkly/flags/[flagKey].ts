@@ -1,3 +1,5 @@
+import { fetch } from 'undici';
+
 export default async function handler(req: any, res: any) {
   // CORS for Contentstack iframe usage
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -36,13 +38,13 @@ export default async function handler(req: any, res: any) {
         Authorization: `api_key ${apiKey}`,
         'Content-Type': 'application/json',
       },
-    });
+    } as any);
 
     if (!response.ok) {
-      let message = response.statusText;
+      let message = response.statusText as any;
       try {
         const errJson = await response.json();
-        message = errJson?.message || message;
+        message = (errJson as any)?.message || message;
       } catch {}
       res.status(response.status).json({ error: `LaunchDarkly API Error: ${message}` });
       return;
@@ -52,8 +54,8 @@ export default async function handler(req: any, res: any) {
 
     // Normalize to expected shape
     const result = {
-      key: flag?.key ?? flagKey,
-      variations: Array.isArray(flag?.variations) ? flag.variations : [],
+      key: (flag as any)?.key ?? flagKey,
+      variations: Array.isArray((flag as any)?.variations) ? (flag as any).variations : [],
     };
 
     res.status(200).json(result);

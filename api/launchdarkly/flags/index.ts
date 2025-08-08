@@ -1,3 +1,5 @@
+import { fetch } from 'undici';
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -28,13 +30,13 @@ export default async function handler(req: any, res: any) {
         Authorization: `api_key ${apiKey}`,
         'Content-Type': 'application/json',
       },
-    });
+    } as any);
 
     if (!response.ok) {
-      let message = response.statusText;
+      let message = response.statusText as any;
       try {
         const errJson = await response.json();
-        message = errJson?.message || message;
+        message = (errJson as any)?.message || message;
       } catch {}
       res.status(response.status).json({ error: `LaunchDarkly API Error: ${message}` });
       return;
