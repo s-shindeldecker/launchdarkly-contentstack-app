@@ -21,19 +21,26 @@ export interface LaunchDarklyError {
 
 class LaunchDarklyService {
   private apiKey: string;
-  private baseUrl: string;
   private environment: string;
+  private proxyUrl: string;
 
   constructor(apiKey: string, environment: string = 'production') {
     this.apiKey = apiKey;
     this.environment = environment;
-    this.baseUrl = 'https://app.launchdarkly.com/api/v2';
+    // Use our Vercel serverless function as a proxy
+    this.proxyUrl = 'https://launchdarkly-contentstack-app.vercel.app/api/launchdarkly';
   }
 
-  private async makeRequest<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+  private async makeRequest<T>(action: string, flagKey?: string): Promise<T> {
+    const params = new URLSearchParams({
+      action,
+      environment: this.environment,
+      ...(flagKey && { flagKey })
+    });
+
+    const response = await fetch(`${this.proxyUrl}?${params}`, {
+      method: 'GET',
       headers: {
-        'Authorization': `api_key ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
     });
@@ -48,7 +55,7 @@ class LaunchDarklyService {
 
   async getFlags(): Promise<LaunchDarklyFlag[]> {
     try {
-      const flags = await this.makeRequest<LaunchDarklyFlag[]>(`/flags?env=${this.environment}`);
+      const flags = await this.makeRequest<LaunchDarklyFlag[]>('flags');
       return flags.filter(flag => !flag.archived && flag.on);
     } catch (error) {
       console.error('Error fetching LaunchDarkly flags:', error);
@@ -58,7 +65,7 @@ class LaunchDarklyService {
 
   async getFlag(key: string): Promise<LaunchDarklyFlag> {
     try {
-      return await this.makeRequest<LaunchDarklyFlag>(`/flags/${key}?env=${this.environment}`);
+      return await this.makeRequest<LaunchDarklyFlag>('flag', key);
     } catch (error) {
       console.error(`Error fetching LaunchDarkly flag ${key}:`, error);
       throw error;

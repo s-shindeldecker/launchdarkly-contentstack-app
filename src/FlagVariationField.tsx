@@ -53,13 +53,14 @@ const FlagVariationField = () => {
         console.log('LaunchDarkly Config:', { 
           apiKey: apiKey ? '***' : 'NOT SET', 
           environment,
-          source: apiKey ? (config?.launchdarkly?.api_key ? 'config' : 'env') : 'none'
+          source: apiKey ? (config?.launchdarkly?.api_key ? 'config' : 'env') : 'none',
+          proxy: 'Using Vercel serverless function proxy'
         });
         
         if (apiKey && apiKey.trim() !== '') {
           setLdService(new LaunchDarklyService(apiKey, environment));
           setUsingMockData(false);
-          console.log('✅ Using real LaunchDarkly API');
+          console.log('✅ Using real LaunchDarkly API via proxy');
         } else {
           setLdService(new LaunchDarklyService('mock-key', environment));
           setUsingMockData(true);
