@@ -13,11 +13,11 @@ const ConfigScreen: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const instance = await ContentstackAppSDK.init();
+        const instance: any = await ContentstackAppSDK.init();
         setSdk(instance);
-        const params = instance?.parameters?.installation || {};
-        setProjectKey(params.projectKey || '');
-        setEnvironmentKey(params.environmentKey || '');
+        const params = await instance.app.getInstallationParameters();
+        setProjectKey(params?.projectKey || '');
+        setEnvironmentKey(params?.environmentKey || '');
         setLoading(false);
       } catch (e: any) {
         setError(e?.message || 'Failed to initialize');
