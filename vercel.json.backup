@@ -11,14 +11,6 @@
   ],
   "routes": [
     {
-      "src": "/api/test",
-      "dest": "/api/test.js"
-    },
-    {
-      "src": "/api/launchdarkly",
-      "dest": "/api/launchdarkly.js"
-    },
-    {
       "src": "/flag-selector.html",
       "dest": "/flag-selector.html"
     },
@@ -31,4 +23,4 @@
       "dest": "/index.html"
     }
   ]
-}
+} 
