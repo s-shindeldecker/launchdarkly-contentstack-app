@@ -34,10 +34,27 @@ const FlagVariationField = () => {
         
         // Get configuration using the public API
         const config = await sdkInstance.getConfig();
-        const apiKey = config?.launchdarkly?.api_key || '';
-        const environment = config?.launchdarkly?.environment || 'production';
+        let apiKey = config?.launchdarkly?.api_key || '';
+        let environment = config?.launchdarkly?.environment || 'production';
         
-        console.log('LaunchDarkly Config:', { apiKey: apiKey ? '***' : 'NOT SET', environment });
+        // Fallback to environment variables if config doesn't have API key
+        if (!apiKey || apiKey.trim() === '') {
+          // Check for environment variables (Vercel sets these)
+          const envApiKey = process.env.LAUNCHDARKLY_API_KEY || process.env.REACT_APP_LAUNCHDARKLY_API_KEY;
+          const envEnvironment = process.env.LAUNCHDARKLY_ENVIRONMENT || process.env.REACT_APP_LAUNCHDARKLY_ENVIRONMENT || 'production';
+          
+          if (envApiKey) {
+            apiKey = envApiKey;
+            environment = envEnvironment;
+            console.log('🔧 Using environment variables for LaunchDarkly config');
+          }
+        }
+        
+        console.log('LaunchDarkly Config:', { 
+          apiKey: apiKey ? '***' : 'NOT SET', 
+          environment,
+          source: apiKey ? (config?.launchdarkly?.api_key ? 'config' : 'env') : 'none'
+        });
         
         if (apiKey && apiKey.trim() !== '') {
           setLdService(new LaunchDarklyService(apiKey, environment));

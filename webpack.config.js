@@ -1,5 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
+require('dotenv').config();
 
 module.exports = {
   entry: './src/index.tsx',
@@ -34,6 +36,13 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './public/flag-selector.html',
       filename: 'flag-selector.html',
+    }),
+    // Make environment variables available to the app
+    new webpack.DefinePlugin({
+      'process.env.LAUNCHDARKLY_API_KEY': JSON.stringify(process.env.LAUNCHDARKLY_API_KEY),
+      'process.env.LAUNCHDARKLY_ENVIRONMENT': JSON.stringify(process.env.LAUNCHDARKLY_ENVIRONMENT),
+      'process.env.REACT_APP_LAUNCHDARKLY_API_KEY': JSON.stringify(process.env.REACT_APP_LAUNCHDARKLY_API_KEY),
+      'process.env.REACT_APP_LAUNCHDARKLY_ENVIRONMENT': JSON.stringify(process.env.REACT_APP_LAUNCHDARKLY_ENVIRONMENT),
     }),
   ],
   devServer: {
