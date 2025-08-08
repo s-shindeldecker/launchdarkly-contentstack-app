@@ -1,5 +1,3 @@
-import { fetch } from 'undici';
-
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -29,11 +27,12 @@ export default async function handler(req: any, res: any) {
       headers: {
         Authorization: `api_key ${apiKey}`,
         'Content-Type': 'application/json',
+        Accept: 'application/json'
       },
     } as any);
 
     if (!response.ok) {
-      let message = response.statusText as any;
+      let message: any = response.statusText;
       try {
         const errJson = await response.json();
         message = (errJson as any)?.message || message;
@@ -44,7 +43,6 @@ export default async function handler(req: any, res: any) {
 
     const flags = await response.json();
 
-    // Return only active, non-archived flags with minimal fields used by the UI
     const filtered = Array.isArray(flags)
       ? flags.filter((f: any) => !f.archived && f.on).map((f: any) => ({ key: f.key, name: f.name }))
       : [];

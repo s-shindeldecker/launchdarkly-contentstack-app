@@ -37,11 +37,12 @@ export default async function handler(req: any, res: any) {
       headers: {
         Authorization: `api_key ${apiKey}`,
         'Content-Type': 'application/json',
+        Accept: 'application/json'
       },
     } as any);
 
     if (!response.ok) {
-      let message = response.statusText as any;
+      let message: any = response.statusText;
       try {
         const errJson = await response.json();
         message = (errJson as any)?.message || message;
