@@ -26,16 +26,16 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const projectKey = process.env.LAUNCHDARKLY_PROJECT_KEY;
+    const projectKeyFromQuery = req.query && req.query.projectKey;
+    const projectKey = projectKeyFromQuery || process.env.LAUNCHDARKLY_PROJECT_KEY;
     if (!projectKey) {
-      res.status(500).json({ error: 'LaunchDarkly project key not configured (set LAUNCHDARKLY_PROJECT_KEY)' });
+      res.status(500).json({ error: 'LaunchDarkly project key not configured (set LAUNCHDARKLY_PROJECT_KEY or pass ?projectKey=...)' });
       return;
     }
 
     const environment = (req.query && req.query.environment) || process.env.LAUNCHDARKLY_ENVIRONMENT || 'production';
     const baseUrl = 'https://app.launchdarkly.com/api/v2';
 
-    // Get flag by key in project, include env to ensure variations align
     const url = `${baseUrl}/flags/${encodeURIComponent(projectKey)}/${encodeURIComponent(flagKey)}?env=${encodeURIComponent(environment)}`;
 
     const response = await fetch(url, {

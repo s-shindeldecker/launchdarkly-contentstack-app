@@ -20,15 +20,14 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const projectKey = process.env.LAUNCHDARKLY_PROJECT_KEY;
+    const projectKeyFromQuery = req.query && req.query.projectKey;
+    const projectKey = projectKeyFromQuery || process.env.LAUNCHDARKLY_PROJECT_KEY;
     if (!projectKey) {
-      res.status(500).json({ error: 'LaunchDarkly project key not configured (set LAUNCHDARKLY_PROJECT_KEY)' });
+      res.status(500).json({ error: 'LaunchDarkly project key not configured (set LAUNCHDARKLY_PROJECT_KEY or pass ?projectKey=...)' });
       return;
     }
 
     const baseUrl = 'https://app.launchdarkly.com/api/v2';
-
-    // Per LD Admin API, list flags requires project key in path
     const url = `${baseUrl}/flags/${encodeURIComponent(projectKey)}?limit=200`;
 
     const response = await fetch(url, {
