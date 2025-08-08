@@ -56,25 +56,56 @@ This Contentstack Marketplace App enables tighter collaboration between content 
    npm run dev
    ```
 
-## 📦 Project Structure
+## 🔧 Configuration
 
-```
-launchdarkly-contentstack-app/
-├── src/
-│   ├── FlagVariationField.tsx    # Main custom field component
-│   ├── services/
-│   │   └── launchDarklyService.ts # LaunchDarkly API service
-│   ├── styles.css                 # Component styles
-│   └── index.tsx                 # Entry point
-├── public/
-│   └── index.html                # HTML template
-├── app-config.json              # Contentstack app configuration
-├── package.json                 # Dependencies and scripts
-├── webpack.config.js           # Build configuration
-└── tsconfig.json               # TypeScript configuration
+### LaunchDarkly API Setup
+
+To connect to your real LaunchDarkly project instead of using mock data:
+
+#### 1. Get Your LaunchDarkly API Key
+
+1. Go to your LaunchDarkly dashboard
+2. Navigate to **Account Settings** → **Authorization**
+3. Click **New API Key**
+4. Set permissions:
+   - `api:read` (required to read flags)
+   - `api:write` (optional, for creating flags)
+5. Copy the generated API key
+
+#### 2. Set Environment Variables in Vercel
+
+1. Go to your [Vercel Dashboard](https://vercel.com/dashboard)
+2. Find your `launchdarkly-contentstack-app` project
+3. Go to **Settings** → **Environment Variables**
+4. Add these variables:
+
+| Name | Value | Environment |
+|------|-------|-------------|
+| `LAUNCHDARKLY_API_KEY` | Your LaunchDarkly API key | Production |
+| `LAUNCHDARKLY_ENVIRONMENT` | Your LD environment (e.g., `production`) | Production |
+
+#### 3. Update app-config.json (Alternative)
+
+If you prefer to configure via the app config, update the `config` section:
+
+```json
+{
+  "config": {
+    "launchdarkly": {
+      "api_key": "your-launchdarkly-api-key-here",
+      "environment": "production",
+      "base_url": "https://app.launchdarkly.com/api/v2"
+    }
+  }
+}
 ```
 
-## 🔌 Configuration
+#### 4. Verify Configuration
+
+After setting up the API key:
+- The warning message "Using mock data" should disappear
+- You should see your real LaunchDarkly flags instead of mock ones
+- Check the browser console for confirmation messages
 
 ### Contentstack App Configuration
 
@@ -95,6 +126,25 @@ Update `app-config.json` with your specific settings:
     }
   }
 }
+```
+
+## 📦 Project Structure
+
+```
+launchdarkly-contentstack-app/
+├── src/
+│   ├── FlagVariationField.tsx    # Main custom field component
+│   ├── services/
+│   │   └── launchDarklyService.ts # LaunchDarkly API service
+│   ├── styles.css                 # Component styles
+│   └── index.tsx                 # Entry point
+├── public/
+│   ├── index.html                # HTML template
+│   └── flag-selector.html        # Contentstack HTML wrapper
+├── app-config.json              # Contentstack app configuration
+├── package.json                 # Dependencies and scripts
+├── webpack.config.js           # Build configuration
+└── tsconfig.json               # TypeScript configuration
 ```
 
 ## 📊 JSON Data Structure

@@ -23,6 +23,7 @@ const FlagVariationField = () => {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [ldService, setLdService] = useState<LaunchDarklyService | null>(null);
+  const [usingMockData, setUsingMockData] = useState(false);
 
   useEffect(() => {
     const initializeSDK = async () => {
@@ -36,10 +37,16 @@ const FlagVariationField = () => {
         const apiKey = config?.launchdarkly?.api_key || '';
         const environment = config?.launchdarkly?.environment || 'production';
         
-        if (apiKey) {
+        console.log('LaunchDarkly Config:', { apiKey: apiKey ? '***' : 'NOT SET', environment });
+        
+        if (apiKey && apiKey.trim() !== '') {
           setLdService(new LaunchDarklyService(apiKey, environment));
+          setUsingMockData(false);
+          console.log('✅ Using real LaunchDarkly API');
         } else {
           setLdService(new LaunchDarklyService('mock-key', environment));
+          setUsingMockData(true);
+          console.log('⚠️ Using mock data - API key not configured');
         }
 
         // Get saved value from field - now expecting direct CMSReference
@@ -70,10 +77,12 @@ const FlagVariationField = () => {
     try {
       let flagsList: LaunchDarklyFlag[];
       
-      if (ldService['apiKey'] === 'mock-key') {
+      if (usingMockData) {
         flagsList = ldService.getMockFlags();
+        console.log('📋 Loading mock flags:', flagsList.map(f => f.key));
       } else {
         flagsList = await ldService.getFlags();
+        console.log('📋 Loading real flags:', flagsList.map(f => f.key));
       }
       
       setFlags(flagsList);
@@ -102,10 +111,12 @@ const FlagVariationField = () => {
     try {
       let variationsList: LaunchDarklyVariation[];
       
-      if (ldService['apiKey'] === 'mock-key') {
+      if (usingMockData) {
         variationsList = ldService.getMockVariations(flagToFetch);
+        console.log('📋 Loading mock variations for', flagToFetch);
       } else {
         variationsList = await ldService.getFlagVariations(flagToFetch);
+        console.log('📋 Loading real variations for', flagToFetch);
       }
       
       setVariations(variationsList);
@@ -182,6 +193,12 @@ const FlagVariationField = () => {
         <label className="field-label">LaunchDarkly Flag Variation</label>
         {saved && <span className="saved-indicator">✓ Saved</span>}
       </div>
+
+      {usingMockData && (
+        <div className="error-message" style={{ backgroundColor: '#fff3cd', borderColor: '#ffeaa7', color: '#856404' }}>
+          ⚠️ Using mock data. Configure LaunchDarkly API key in Vercel environment variables.
+        </div>
+      )}
 
       <div className="field-content">
         <div className="input-group">
