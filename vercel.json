@@ -7,9 +7,17 @@
       "config": {
         "distDir": "dist"
       }
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
     {
       "src": "/flag-selector.html",
       "dest": "/flag-selector.html"
@@ -23,4 +31,4 @@
       "dest": "/index.html"
     }
   ]
-} 
+}
