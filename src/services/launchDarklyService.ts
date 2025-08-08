@@ -22,41 +22,36 @@ export interface LaunchDarklyError {
 class LaunchDarklyService {
   private apiKey: string;
   private environment: string;
-  private proxyUrl: string;
+  private baseApiUrl: string;
 
   constructor(apiKey: string, environment: string = 'production') {
     this.apiKey = apiKey;
     this.environment = environment;
-    // Use our Vercel serverless function as a proxy
-    this.proxyUrl = 'https://launchdarkly-contentstack-app.vercel.app/api/launchdarkly';
-  }
-
-  private async makeRequest<T>(action: string, flagKey?: string): Promise<T> {
-    const params = new URLSearchParams({
-      action,
-      environment: this.environment,
-      ...(flagKey && { flagKey })
-    });
-
-    const response = await fetch(`${this.proxyUrl}?${params}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const error: LaunchDarklyError = await response.json();
-      throw new Error(`LaunchDarkly API Error: ${error.message || response.statusText}`);
-    }
-
-    return response.json();
+    // Use our Vercel serverless functions under /api as proxy
+    this.baseApiUrl = '/api/launchdarkly';
   }
 
   async getFlags(): Promise<LaunchDarklyFlag[]> {
     try {
-      const flags = await this.makeRequest<LaunchDarklyFlag[]>('flags');
-      return flags.filter(flag => !flag.archived && flag.on);
+      const response = await fetch(`${this.baseApiUrl}/flags?environment=${encodeURIComponent(this.environment)}`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const error: LaunchDarklyError = await response.json();
+        throw new Error(`LaunchDarkly API Error: ${error.message || response.statusText}`);
+      }
+
+      const flags: any[] = await response.json();
+      // API returns minimal shape [{ key, name }]; normalize to LaunchDarklyFlag
+      return flags.map((f) => ({
+        key: f.key,
+        name: f.name,
+        description: f.description,
+        variations: Array.isArray(f.variations) ? f.variations : [],
+        on: f.on ?? true,
+        archived: f.archived ?? false,
+      }));
     } catch (error) {
       console.error('Error fetching LaunchDarkly flags:', error);
       throw error;
@@ -65,7 +60,24 @@ class LaunchDarklyService {
 
   async getFlag(key: string): Promise<LaunchDarklyFlag> {
     try {
-      return await this.makeRequest<LaunchDarklyFlag>('flag', key);
+      const response = await fetch(`${this.baseApiUrl}/flags/${encodeURIComponent(key)}?environment=${encodeURIComponent(this.environment)}`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const error: LaunchDarklyError = await response.json();
+        throw new Error(`LaunchDarkly API Error: ${error.message || response.statusText}`);
+      }
+
+      const data: any = await response.json();
+      return {
+        key: data.key,
+        name: data.name ?? data.key,
+        description: data.description,
+        variations: Array.isArray(data.variations) ? data.variations : [],
+        on: true,
+        archived: false,
+      };
     } catch (error) {
       console.error(`Error fetching LaunchDarkly flag ${key}:`, error);
       throw error;
