@@ -20,10 +20,18 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const environment = (req.query && req.query.environment) || process.env.LAUNCHDARKLY_ENVIRONMENT || 'production';
+    const projectKey = process.env.LAUNCHDARKLY_PROJECT_KEY;
+    if (!projectKey) {
+      res.status(500).json({ error: 'LaunchDarkly project key not configured (set LAUNCHDARKLY_PROJECT_KEY)' });
+      return;
+    }
+
     const baseUrl = 'https://app.launchdarkly.com/api/v2';
 
-    const response = await fetch(`${baseUrl}/flags?env=${encodeURIComponent(environment)}`, {
+    // Per LD Admin API, list flags requires project key in path
+    const url = `${baseUrl}/flags/${encodeURIComponent(projectKey)}?limit=200`;
+
+    const response = await fetch(url, {
       headers: {
         Authorization: `api_key ${apiKey}`,
         'Content-Type': 'application/json',
@@ -42,9 +50,11 @@ module.exports = async function handler(req, res) {
     }
 
     const flags = await response.json();
-    const filtered = Array.isArray(flags)
-      ? flags.filter((f) => !f.archived && f.on).map((f) => ({ key: f.key, name: f.name }))
-      : [];
+    const filtered = Array.isArray(flags && flags.items)
+      ? flags.items.filter((f) => !f.archived).map((f) => ({ key: f.key, name: f.name }))
+      : Array.isArray(flags)
+        ? flags.filter((f) => !f.archived).map((f) => ({ key: f.key, name: f.name }))
+        : [];
 
     res.status(200).json(filtered);
   } catch (err) {

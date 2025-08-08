@@ -26,10 +26,19 @@ module.exports = async function handler(req, res) {
       return;
     }
 
+    const projectKey = process.env.LAUNCHDARKLY_PROJECT_KEY;
+    if (!projectKey) {
+      res.status(500).json({ error: 'LaunchDarkly project key not configured (set LAUNCHDARKLY_PROJECT_KEY)' });
+      return;
+    }
+
     const environment = (req.query && req.query.environment) || process.env.LAUNCHDARKLY_ENVIRONMENT || 'production';
     const baseUrl = 'https://app.launchdarkly.com/api/v2';
 
-    const response = await fetch(`${baseUrl}/flags/${encodeURIComponent(flagKey)}?env=${encodeURIComponent(environment)}`, {
+    // Get flag by key in project, include env to ensure variations align
+    const url = `${baseUrl}/flags/${encodeURIComponent(projectKey)}/${encodeURIComponent(flagKey)}?env=${encodeURIComponent(environment)}`;
+
+    const response = await fetch(url, {
       headers: {
         Authorization: `api_key ${apiKey}`,
         'Content-Type': 'application/json',
@@ -57,4 +66,4 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     res.status(500).json({ error: (err && err.message) || 'Internal server error' });
   }
-}; 
+} 
