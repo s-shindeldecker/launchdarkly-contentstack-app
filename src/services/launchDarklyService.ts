@@ -22,18 +22,20 @@ export interface LaunchDarklyError {
 class LaunchDarklyService {
   private apiKey: string;
   private projectKey: string;
+  private environment: string;
   private baseApiUrl: string;
 
-  constructor(apiKey: string, projectKey: string) {
+  constructor(apiKey: string, projectKey: string, environment: string = 'production') {
     this.apiKey = apiKey;
     this.projectKey = projectKey;
+    this.environment = environment;
     // Use our Vercel serverless functions under /api as proxy
     this.baseApiUrl = '/api/launchdarkly';
   }
 
   async getFlags(): Promise<LaunchDarklyFlag[]> {
     try {
-      const response = await fetch(`${this.baseApiUrl}/flags?projectKey=${encodeURIComponent(this.projectKey)}`, {
+      const response = await fetch(`${this.baseApiUrl}/flags?projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}`, {
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -60,7 +62,7 @@ class LaunchDarklyService {
 
   async getFlag(key: string): Promise<LaunchDarklyFlag> {
     try {
-      const response = await fetch(`${this.baseApiUrl}/flags/${encodeURIComponent(key)}?projectKey=${encodeURIComponent(this.projectKey)}`, {
+      const response = await fetch(`${this.baseApiUrl}/flags/${encodeURIComponent(key)}?projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}`, {
         headers: { 'Content-Type': 'application/json' },
       });
 

@@ -43,11 +43,11 @@ const FlagVariationField = () => {
         
         if (projectKey && projectKey.trim() !== '') {
           // For now, we'll use a mock API key since the real one is in the backend
-          setLdService(new LaunchDarklyService('mock-key', projectKey));
+          setLdService(new LaunchDarklyService('mock-key', projectKey, 'production'));
           setUsingMockData(false);
           console.log('✅ Using real LaunchDarkly API via proxy');
         } else {
-          setLdService(new LaunchDarklyService('mock-key', 'demo'));
+          setLdService(new LaunchDarklyService('mock-key', 'demo', 'production'));
           setUsingMockData(true);
           console.log('⚠️ Using mock data - project key not configured');
         }
@@ -106,8 +106,8 @@ const FlagVariationField = () => {
       if (!usingMockData) {
         console.log('🔄 Falling back to mock data due to error');
         setUsingMockData(true);
-        setLdService(new LaunchDarklyService('mock-key', 'demo'));
-        const mockFlags = new LaunchDarklyService('mock-key', 'demo').getMockFlags();
+        setLdService(new LaunchDarklyService('mock-key', 'demo', 'production'));
+        const mockFlags = new LaunchDarklyService('mock-key', 'demo', 'production').getMockFlags();
         setFlags(mockFlags);
       }
     } finally {
