@@ -68,6 +68,9 @@ module.exports = async function handler(req, res) {
     }
 
     const data = await response.json();
+    console.log('LaunchDarkly raw response data:', JSON.stringify(data, null, 2));
+    console.log('Response data type:', typeof data);
+    console.log('Response data keys:', data ? Object.keys(data) : 'null/undefined');
     
     // Handle v2 response format
     let flags = [];
@@ -78,7 +81,7 @@ module.exports = async function handler(req, res) {
       // Direct array format
       flags = data.filter(f => !f.archived).map(f => ({ key: f.key, name: f.name }));
     }
-
+    console.log('Processed flags:', flags);
     res.status(200).json(flags);
 
   } catch (error) {
