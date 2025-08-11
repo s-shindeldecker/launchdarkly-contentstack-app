@@ -35,7 +35,7 @@ class LaunchDarklyService {
 
   async getFlags(): Promise<LaunchDarklyFlag[]> {
     try {
-      const response = await fetch(`${this.baseApiUrl}/flags?projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}`, {
+      const response = await fetch(`${this.baseApiUrl}?projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}`, {
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -62,7 +62,7 @@ class LaunchDarklyService {
 
   async getFlag(key: string): Promise<LaunchDarklyFlag> {
     try {
-      const response = await fetch(`${this.baseApiUrl}/flags/${encodeURIComponent(key)}?projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}`, {
+      const response = await fetch(`${this.baseApiUrl}?projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}&flagKey=${encodeURIComponent(key)}`, {
         headers: { 'Content-Type': 'application/json' },
       });
 
