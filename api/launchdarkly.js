@@ -29,8 +29,8 @@ module.exports = async function handler(req, res) {
     const environment = req.query.environment || 'production';
 
     const baseUrl = 'https://app.launchdarkly.com/api/v2';
-    // Try v1 API format: /api/v1/flags/{projectKey}
-    const url = `${baseUrl.replace('/v2', '/v1')}/flags/${encodeURIComponent(projectKey)}`;
+    // Use correct v2 API format: /projects/{projectKey}/flags
+    const url = `${baseUrl}/projects/${encodeURIComponent(projectKey)}/flags`;
 
     console.log('Calling LaunchDarkly API:', url);
 
@@ -38,25 +38,44 @@ module.exports = async function handler(req, res) {
       headers: {
         'Authorization': `api_key ${apiKey}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      // Try to get error details, but handle non-JSON responses gracefully
+      let errorMessage = response.statusText;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch (parseError) {
+        // If response isn't JSON, try to get text content
+        try {
+          const textContent = await response.text();
+          if (textContent.includes('<!DOCTYPE')) {
+            errorMessage = `HTML response received (${response.status}) - check API endpoint and authentication`;
+          } else {
+            errorMessage = `Non-JSON response (${response.status}): ${textContent.substring(0, 100)}`;
+          }
+        } catch (textError) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+      }
+      
       return res.status(response.status).json({ 
-        error: `LaunchDarkly API Error: ${error.message || response.statusText}` 
+        error: `LaunchDarkly API Error: ${errorMessage}` 
       });
     }
 
     const data = await response.json();
     
-    // Handle both v1 and v2 response formats
+    // Handle v2 response format
     let flags = [];
     if (data && data.items) {
-      // v2 format
+      // v2 format with items array
       flags = data.items.filter(f => !f.archived).map(f => ({ key: f.key, name: f.name }));
     } else if (Array.isArray(data)) {
-      // v1 format
+      // Direct array format
       flags = data.filter(f => !f.archived).map(f => ({ key: f.key, name: f.name }));
     }
 
