@@ -41,11 +41,22 @@ const FlagVariationField = () => {
           proxy: 'Using Vercel serverless function proxy'
         });
         
+        // Try to get configuration from Contentstack app SDK first
+        try {
+          const params = await (sdkInstance as any).app?.getInstallationParameters();
+          if (params?.projectKey) {
+            projectKey = params.projectKey;
+            console.log('✅ Got project key from Contentstack app config:', projectKey);
+          }
+        } catch (configError) {
+          console.log('⚠️ Could not get config from Contentstack app:', configError);
+        }
+        
         if (projectKey && projectKey.trim() !== '') {
-          // For now, we'll use a mock API key since the real one is in the backend
+          // Try to use real API, but fall back to mock if CSP blocks it
           setLdService(new LaunchDarklyService('mock-key', projectKey, 'production'));
           setUsingMockData(false);
-          console.log('✅ Using real LaunchDarkly API via proxy');
+          console.log('✅ Attempting to use real LaunchDarkly API via proxy');
         } else {
           setLdService(new LaunchDarklyService('mock-key', 'demo', 'production'));
           setUsingMockData(true);
@@ -84,8 +95,32 @@ const FlagVariationField = () => {
         flagsList = ldService.getMockFlags();
         console.log('📋 Loading mock flags:', flagsList.map(f => f.key));
       } else {
-        flagsList = await ldService.getFlags();
-        console.log('📋 Loading real flags:', flagsList.map(f => f.key));
+        try {
+          flagsList = await ldService.getFlags();
+          console.log('📋 Loading real flags:', flagsList.map(f => f.key));
+        } catch (apiError: any) {
+          console.error('❌ Real API failed, likely due to CSP:', apiError);
+          
+          // Check if this is a CSP/network error
+          if (apiError.message?.includes('Failed to fetch') || 
+              apiError.message?.includes('NetworkError') ||
+              apiError.message?.includes('CSP') ||
+              apiError.message?.includes('Content Security Policy')) {
+            
+            console.log('🔄 CSP blocked API call, falling back to mock data');
+            setUsingMockData(true);
+            setLdService(new LaunchDarklyService('mock-key', 'demo', 'production'));
+            
+            // Get mock flags from the new service
+            const mockService = new LaunchDarklyService('mock-key', 'demo', 'production');
+            flagsList = mockService.getMockFlags();
+            
+            setError('⚠️ Using mock data - Content Security Policy blocked API connection. Please configure Contentstack to allow connections to launchdarkly-contentstack-app.vercel.app');
+          } else {
+            // Re-throw if it's not a CSP issue
+            throw apiError;
+          }
+        }
       }
       
       setFlags(flagsList);
@@ -100,15 +135,17 @@ const FlagVariationField = () => {
       }
     } catch (err: any) {
       console.error('Error fetching flags:', err);
-      setError('Failed to load flags: ' + (err?.message || 'Unknown error'));
       
-      // Fallback to mock data on error
+      // If we haven't already fallen back to mock data, do it now
       if (!usingMockData) {
         console.log('🔄 Falling back to mock data due to error');
         setUsingMockData(true);
         setLdService(new LaunchDarklyService('mock-key', 'demo', 'production'));
         const mockFlags = new LaunchDarklyService('mock-key', 'demo', 'production').getMockFlags();
         setFlags(mockFlags);
+        setError('⚠️ Using mock data - API connection failed. This may be due to Content Security Policy restrictions.');
+      } else {
+        setError('Failed to load flags: ' + (err?.message || 'Unknown error'));
       }
     } finally {
       setLoading(false);
@@ -224,14 +261,20 @@ const FlagVariationField = () => {
         <h3 style={{ margin: '0 0 8px 0', fontSize: 16 }}>LaunchDarkly Flag Selection</h3>
         {usingMockData && (
           <div style={{ 
-            padding: 8, 
+            padding: 12, 
             backgroundColor: '#fff3cd', 
             border: '1px solid #ffeaa7', 
             borderRadius: 4, 
             fontSize: 12,
             marginBottom: 12
           }}>
-            ⚠️ Using mock data - configure project key in config screen
+            <div style={{ fontWeight: 'bold', marginBottom: 4 }}>⚠️ Using Mock Data</div>
+            <div style={{ marginBottom: 8 }}>
+              The app is currently using mock data because Contentstack's Content Security Policy is blocking connections to the LaunchDarkly API.
+            </div>
+            <div style={{ fontSize: 11, color: '#666' }}>
+              <strong>To fix this:</strong> Configure Contentstack to allow connections to <code>launchdarkly-contentstack-app.vercel.app</code> in your CSP settings, or contact your Contentstack administrator.
+            </div>
           </div>
         )}
       </div>
