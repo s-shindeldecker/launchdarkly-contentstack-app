@@ -1,21 +1,35 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "dist/**/*",
+      "use": "@vercel/static"
+    }
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/api/$1"
     },
     {
+      "src": "/config-screen.html",
+      "dest": "/dist/config-screen.html"
+    },
+    {
       "src": "/flag-selector.html",
-      "dest": "/flag-selector.html"
+      "dest": "/dist/flag-selector.html"
     },
     {
       "src": "/index.js",
-      "dest": "/index.js"
+      "dest": "/dist/index.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/dist/index.html"
     }
   ]
 }
