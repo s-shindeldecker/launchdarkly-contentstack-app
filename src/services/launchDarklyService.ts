@@ -29,8 +29,8 @@ class LaunchDarklyService {
     this.apiKey = apiKey;
     this.projectKey = projectKey;
     this.environment = environment;
-    // Use our Vercel serverless functions under /api as proxy
-    this.baseApiUrl = '/api/launchdarkly';
+    // Use full Vercel app URL for the API proxy
+    this.baseApiUrl = 'https://launchdarkly-contentstack-app.vercel.app/api/launchdarkly';
   }
 
   async getFlags(): Promise<LaunchDarklyFlag[]> {
