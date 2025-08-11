@@ -30,7 +30,7 @@ module.exports = async function handler(req, res) {
 
     const baseUrl = 'https://app.launchdarkly.com/api/v2';
     // Try query parameter format: /flags?project={projectKey}
-    const url = `${baseUrl}/flags?project=${encodeURIComponent(projectKey)}`;
+    const url = `${baseUrl}/projects/${encodeURIComponent(projectKey)}/flags`;
 
     console.log('Calling LaunchDarkly API:', url);
 
