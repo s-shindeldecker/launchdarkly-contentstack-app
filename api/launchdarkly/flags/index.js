@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const apiKey = process.env.LAUNCHDARKLY_API_KEY;
+    const apiKey = process.env.LD_API_KEY;
     if (!apiKey) {
       res.status(500).json({ error: 'LaunchDarkly API key not configured' });
       return;
