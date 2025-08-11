@@ -31,8 +31,8 @@ module.exports = async function handler(req, res) {
     const environment = req.query.environment || 'production';
 
     const baseUrl = 'https://app.launchdarkly.com/api/v2';
-    // Use correct v2 API format: /projects/{projectKey}/flags?env={environment}
-    const url = `${baseUrl}/projects/${encodeURIComponent(projectKey)}/flags?env=${encodeURIComponent(environment)}&limit=200`;
+    // Try different v2 API format: /projects/{projectKey}/flags (without env parameter)
+    const url = `${baseUrl}/projects/${encodeURIComponent(projectKey)}/flags?limit=200`;
 
     console.log('Calling LaunchDarkly API:', url);
 
