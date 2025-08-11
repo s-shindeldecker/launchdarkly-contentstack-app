@@ -21,19 +21,19 @@ export interface LaunchDarklyError {
 
 class LaunchDarklyService {
   private apiKey: string;
-  private environment: string;
+  private projectKey: string;
   private baseApiUrl: string;
 
-  constructor(apiKey: string, environment: string = 'production') {
+  constructor(apiKey: string, projectKey: string) {
     this.apiKey = apiKey;
-    this.environment = environment;
+    this.projectKey = projectKey;
     // Use our Vercel serverless functions under /api as proxy
     this.baseApiUrl = '/api/launchdarkly';
   }
 
   async getFlags(): Promise<LaunchDarklyFlag[]> {
     try {
-      const response = await fetch(`${this.baseApiUrl}/flags?environment=${encodeURIComponent(this.environment)}`, {
+      const response = await fetch(`${this.baseApiUrl}/flags?projectKey=${encodeURIComponent(this.projectKey)}`, {
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -60,7 +60,7 @@ class LaunchDarklyService {
 
   async getFlag(key: string): Promise<LaunchDarklyFlag> {
     try {
-      const response = await fetch(`${this.baseApiUrl}/flags/${encodeURIComponent(key)}?environment=${encodeURIComponent(this.environment)}`, {
+      const response = await fetch(`${this.baseApiUrl}/flags/${encodeURIComponent(key)}?projectKey=${encodeURIComponent(this.projectKey)}`, {
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -98,60 +98,46 @@ class LaunchDarklyService {
   getMockFlags(): LaunchDarklyFlag[] {
     return [
       {
-        key: 'feature-banner',
-        name: 'Feature Banner',
-        description: 'Controls the display of promotional banners',
-        on: true,
-        archived: false,
+        key: 'welcome-message',
+        name: 'Welcome Message',
+        description: 'Controls the welcome message shown to users',
         variations: [
-          {
-            _id: 'control',
-            name: 'Control (Default)',
-            description: 'Default banner behavior',
-            value: null
-          },
-          {
-            _id: 'variation-a',
-            name: 'Variation A',
-            description: 'Show promotional banner A',
-            value: 'banner-a'
-          },
-          {
-            _id: 'variation-b',
-            name: 'Variation B',
-            description: 'Show promotional banner B',
-            value: 'banner-b'
-          }
-        ]
+          { name: 'Default', description: 'Standard welcome message', value: 'Welcome!', _id: '1' },
+          { name: 'Personalized', description: 'Personalized welcome message', value: 'Welcome back!', _id: '2' },
+          { name: 'Promotional', description: 'Promotional welcome message', value: 'Welcome! Check out our latest offers!', _id: '3' }
+        ],
+        on: true,
+        archived: false
       },
       {
-        key: 'content-personalization',
-        name: 'Content Personalization',
-        description: 'Enables personalized content delivery',
-        on: true,
-        archived: false,
+        key: 'feature-banner',
+        name: 'Feature Banner',
+        description: 'Controls the feature banner visibility',
         variations: [
-          {
-            _id: 'control',
-            name: 'Control (Default)',
-            description: 'Standard content delivery',
-            value: null
-          },
-          {
-            _id: 'variation-a',
-            name: 'Personalized A',
-            description: 'Personalized content variation A',
-            value: 'personalized-a'
-          }
-        ]
+          { name: 'Hidden', description: 'Banner is hidden', value: false, _id: '4' },
+          { name: 'Visible', description: 'Banner is visible', value: true, _id: '5' }
+        ],
+        on: true,
+        archived: false
+      },
+      {
+        key: 'user-experience',
+        name: 'User Experience',
+        description: 'Controls the user experience features',
+        variations: [
+          { name: 'Basic', description: 'Basic user experience', value: 'basic', _id: '6' },
+          { name: 'Enhanced', description: 'Enhanced user experience', value: 'enhanced', _id: '7' },
+          { name: 'Premium', description: 'Premium user experience', value: 'premium', _id: '8' }
+        ],
+        on: true,
+        archived: false
       }
     ];
   }
 
   getMockVariations(flagKey: string): LaunchDarklyVariation[] {
-    const flags = this.getMockFlags();
-    const flag = flags.find(f => f.key === flagKey);
-    return flag?.variations || [];
+    const flag = this.getMockFlags().find(f => f.key === flagKey);
+    return flag ? flag.variations : [];
   }
 }
 

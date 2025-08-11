@@ -32,39 +32,24 @@ const FlagVariationField = () => {
         const sdkInstance = await ContentstackAppSDK.init();
         setSdk(sdkInstance);
         
-        // Get configuration using the public API
-        const config = await sdkInstance.getConfig();
-        let apiKey = config?.launchdarkly?.api_key || '';
-        let environment = config?.launchdarkly?.environment || 'production';
-        
-        // Fallback to environment variables if config doesn't have API key
-        if (!apiKey || apiKey.trim() === '') {
-          // Check for environment variables (Vercel sets these)
-          const envApiKey = process.env.LAUNCHDARKLY_API_KEY || process.env.REACT_APP_LAUNCHDARKLY_API_KEY;
-          const envEnvironment = process.env.LAUNCHDARKLY_ENVIRONMENT || process.env.REACT_APP_LAUNCHDARKLY_ENVIRONMENT || 'production';
-          
-          if (envApiKey) {
-            apiKey = envApiKey;
-            environment = envEnvironment;
-            console.log('🔧 Using environment variables for LaunchDarkly config');
-          }
-        }
+        // Get configuration from environment variables (Vercel sets these)
+        let projectKey = process.env.LAUNCHDARKLY_PROJECT_KEY || '';
         
         console.log('LaunchDarkly Config:', { 
-          apiKey: apiKey ? '***' : 'NOT SET', 
-          environment,
-          source: apiKey ? (config?.launchdarkly?.api_key ? 'config' : 'env') : 'none',
+          projectKey: projectKey ? projectKey : 'NOT SET', 
+          source: projectKey ? 'env' : 'none',
           proxy: 'Using Vercel serverless function proxy'
         });
         
-        if (apiKey && apiKey.trim() !== '') {
-          setLdService(new LaunchDarklyService(apiKey, environment));
+        if (projectKey && projectKey.trim() !== '') {
+          // For now, we'll use a mock API key since the real one is in the backend
+          setLdService(new LaunchDarklyService('mock-key', projectKey));
           setUsingMockData(false);
           console.log('✅ Using real LaunchDarkly API via proxy');
         } else {
-          setLdService(new LaunchDarklyService('mock-key', environment));
+          setLdService(new LaunchDarklyService('mock-key', 'demo'));
           setUsingMockData(true);
-          console.log('⚠️ Using mock data - API key not configured');
+          console.log('⚠️ Using mock data - project key not configured');
         }
 
         // Get saved value from field - now expecting direct CMSReference
@@ -104,185 +89,201 @@ const FlagVariationField = () => {
       }
       
       setFlags(flagsList);
-      setLoading(false);
-    } catch (err) {
-      setError('Failed to fetch flags: ' + (err as Error).message);
+      
+      // If we have a saved flag key, try to select it
+      if (flagKey && flagsList.some(f => f.key === flagKey)) {
+        const flag = flagsList.find(f => f.key === flagKey);
+        if (flag) {
+          setSelected(0); // Default to first variation
+          await fetchFlagVariations(flag.key);
+        }
+      }
+    } catch (err: any) {
+      console.error('Error fetching flags:', err);
+      setError('Failed to load flags: ' + (err?.message || 'Unknown error'));
+      
+      // Fallback to mock data on error
+      if (!usingMockData) {
+        console.log('🔄 Falling back to mock data due to error');
+        setUsingMockData(true);
+        setLdService(new LaunchDarklyService('mock-key', 'demo'));
+        const mockFlags = new LaunchDarklyService('mock-key', 'demo').getMockFlags();
+        setFlags(mockFlags);
+      }
+    } finally {
       setLoading(false);
     }
   };
 
   const fetchFlagVariations = async (key?: string) => {
-    const flagToFetch = key || flagKey;
-    if (!flagToFetch) {
-      setError('Please select a flag');
-      return;
-    }
-
-    if (!ldService) {
-      setError('LaunchDarkly service not initialized');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
+    if (!ldService) return;
+    
+    const flagKeyToUse = key || flagKey;
+    if (!flagKeyToUse) return;
 
     try {
       let variationsList: LaunchDarklyVariation[];
       
       if (usingMockData) {
-        variationsList = ldService.getMockVariations(flagToFetch);
-        console.log('📋 Loading mock variations for', flagToFetch);
+        variationsList = ldService.getMockVariations(flagKeyToUse);
       } else {
-        variationsList = await ldService.getFlagVariations(flagToFetch);
-        console.log('📋 Loading real variations for', flagToFetch);
+        variationsList = await ldService.getFlagVariations(flagKeyToUse);
       }
       
       setVariations(variationsList);
-      setLoading(false);
-    } catch (err) {
-      setError('Failed to fetch flag variations: ' + (err as Error).message);
-      setLoading(false);
+      
+      // Reset selection if current selection is invalid
+      if (selected >= variationsList.length) {
+        setSelected(0);
+      }
+    } catch (err: any) {
+      console.error('Error fetching variations:', err);
+      setError('Failed to load variations: ' + (err?.message || 'Unknown error'));
     }
   };
 
   const handleFlagChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newFlagKey = e.target.value;
     setFlagKey(newFlagKey);
-    setVariations([]);
     setSelected(0);
-    setError(null);
     
     if (newFlagKey) {
       fetchFlagVariations(newFlagKey);
+    } else {
+      setVariations([]);
     }
   };
 
   const handleSave = async () => {
-    if (!sdk) {
-      setError('SDK not initialized');
-      return;
-    }
-
-    if (!flagKey) {
-      setError('Please select a flag');
-      return;
-    }
-
-    if (variations.length === 0) {
-      setError('Please load flag variations first');
-      return;
-    }
-
-    const field = sdk.location.CustomField?.field;
-    if (!field) {
-      setError('Field not available');
-      return;
-    }
-
-    const entryId = sdk.location.CustomField?.entry?.getData()?.uid || '';
-    const contentType = sdk.location.CustomField?.entry?.content_type?.uid || '';
+    if (!sdk || !flagKey || variations.length === 0) return;
     
-    // Get environment from config
-    const config = await sdk.getConfig();
-    const environment = config?.environment || 'preview';
-    
-    // Direct CMSReference structure matching your POC
-    const value: SavedValue = {
-      cmsType: 'contentstack',
-      entryId,
-      environment,
-      contentType
-    };
+    try {
+      const field = sdk.location.CustomField?.field;
+      if (!field) {
+        setError('Field not found');
+        return;
+      }
 
-    field.setData(value);
-    setSaved(true);
-    setError(null);
+      const selectedVariation = variations[selected];
+      if (!selectedVariation) {
+        setError('No variation selected');
+        return;
+      }
 
-    setTimeout(() => setSaved(false), 2000);
+      // Create the saved value structure matching your POC
+      const savedValue: SavedValue = {
+        cmsType: 'contentstack',
+        entryId: field.getData()?.entryId || 'unknown',
+        environment: field.getData()?.environment || 'production',
+        contentType: field.getData()?.contentType || 'unknown'
+      };
+
+      // Save to the field
+      await field.setData(savedValue);
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      
+      console.log('✅ Saved flag selection:', {
+        flagKey,
+        variation: selectedVariation.name,
+        value: selectedVariation.value
+      });
+    } catch (err: any) {
+      console.error('Error saving:', err);
+      setError('Failed to save: ' + (err?.message || 'Unknown error'));
+    }
   };
 
   const handleVariationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelected(Number(e.target.value));
+    setSelected(parseInt(e.target.value));
   };
 
+  if (loading && flags.length === 0) {
+    return (
+      <div style={{ padding: 16, textAlign: 'center' }}>
+        <div>Loading LaunchDarkly flags...</div>
+      </div>
+    );
+  }
+
+  if (error && flags.length === 0) {
+    return (
+      <div style={{ padding: 16 }}>
+        <div style={{ color: '#b00020', marginBottom: 12 }}>Error: {error}</div>
+        <button onClick={fetchFlags} style={{ padding: '8px 12px' }}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flag-variation-field">
-      <div className="field-header">
-        <label className="field-label">LaunchDarkly Flag Variation</label>
-        {saved && <span className="saved-indicator">✓ Saved</span>}
+    <div style={{ padding: 16, fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif' }}>
+      <div style={{ marginBottom: 16 }}>
+        <h3 style={{ margin: '0 0 8px 0', fontSize: 16 }}>LaunchDarkly Flag Selection</h3>
+        {usingMockData && (
+          <div style={{ 
+            padding: 8, 
+            backgroundColor: '#fff3cd', 
+            border: '1px solid #ffeaa7', 
+            borderRadius: 4, 
+            fontSize: 12,
+            marginBottom: 12
+          }}>
+            ⚠️ Using mock data - configure project key in config screen
+          </div>
+        )}
       </div>
 
-      {usingMockData && (
-        <div className="error-message" style={{ backgroundColor: '#fff3cd', borderColor: '#ffeaa7', color: '#856404' }}>
-          ⚠️ Using mock data. Configure LaunchDarkly API key in Vercel environment variables.
-        </div>
-      )}
-
-      <div className="field-content">
-        <div className="input-group">
-          <label className="input-label">Select Flag</label>
-          <select
-            value={flagKey}
+      <div style={{ display: 'grid', gap: 12 }}>
+        <label style={{ display: 'grid', gap: 6 }}>
+          <span>Select Flag:</span>
+          <select 
+            value={flagKey} 
             onChange={handleFlagChange}
-            className="select-input"
-            disabled={loading}
+            style={{ padding: 8, border: '1px solid #ccc', borderRadius: 4 }}
           >
-            <option value="">Choose a LaunchDarkly flag...</option>
-            {flags.map((flag) => (
-              <option value={flag.key} key={flag.key}>
+            <option value="">Choose a flag...</option>
+            {flags.map(flag => (
+              <option key={flag.key} value={flag.key}>
                 {flag.name} ({flag.key})
               </option>
             ))}
           </select>
-        </div>
+        </label>
 
-        <button
-          onClick={fetchFlags}
-          disabled={loading}
-          className="load-button"
-        >
-          {loading ? 'Loading...' : 'Refresh Flags'}
-        </button>
-
-        {error && <div className="error-message">{error}</div>}
-
-        {variations.length > 0 && (
-          <div className="variation-selector">
-            <label className="input-label">Select Variation</label>
-            <select
-              value={selected}
+        {flagKey && variations.length > 0 && (
+          <label style={{ display: 'grid', gap: 6 }}>
+            <span>Select Variation:</span>
+            <select 
+              value={selected} 
               onChange={handleVariationChange}
-              className="select-input"
+              style={{ padding: 8, border: '1px solid #ccc', borderRadius: 4 }}
             >
               {variations.map((variation, index) => (
-                <option value={index} key={variation._id}>
-                  {variation.name}
-                  {variation.description && ` - ${variation.description}`}
+                <option key={variation._id} value={index}>
+                  {variation.name} - {String(variation.value)}
                 </option>
               ))}
             </select>
-          </div>
+          </label>
         )}
 
-        <button
-          onClick={handleSave}
-          disabled={!flagKey || variations.length === 0}
-          className="save-button"
-        >
-          Save Mapping
-        </button>
-
-        {flagKey && variations.length > 0 && (
-          <div className="mapping-preview">
-            <div className="preview-label">Current Mapping:</div>
-            <div className="preview-content">
-              <strong>Flag:</strong> {flags.find(f => f.key === flagKey)?.name || flagKey}<br/>
-              <strong>Variation:</strong> {variations[selected]?.name}<br/>
-              <strong>Entry ID:</strong> {sdk?.location.CustomField?.entry?.getData()?.uid || 'N/A'}<br/>
-              <strong>Content Type:</strong> {sdk?.location.CustomField?.entry?.content_type?.uid || 'N/A'}
-            </div>
-          </div>
+        {error && (
+          <div style={{ color: '#b00020', fontSize: 12 }}>{error}</div>
         )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button 
+            onClick={handleSave} 
+            disabled={!flagKey || variations.length === 0}
+            style={{ padding: '8px 12px' }}
+          >
+            Save Selection
+          </button>
+          {saved && <span style={{ color: '#0a7f36' }}>Saved ✓</span>}
+        </div>
       </div>
     </div>
   );
