@@ -14,6 +14,25 @@ export interface LaunchDarklyVariation {
   _id: string;
 }
 
+export interface ContentPreview {
+  flagKey: string;
+  variationIndex: number;
+  variationValue: any;
+  content: any;
+  previewUrl?: string;
+  metadata?: any;
+}
+
+export interface ContentMapping {
+  entryId: string;
+  contentType: string;
+  flagKey: string;
+  variationIndex: number;
+  variationValue: any;
+  previewContent?: ContentPreview;
+  lastUpdated?: string;
+}
+
 export interface LaunchDarklyError {
   code: string;
   message: string;
@@ -30,12 +49,12 @@ class LaunchDarklyService {
     this.projectKey = projectKey;
     this.environment = environment;
     // Use full Vercel app URL for the API proxy
-    this.baseApiUrl = 'https://launchdarkly-contentstack-app.vercel.app/api/launchdarkly';
+    this.baseApiUrl = 'https://launchdarkly-contentstack-app.vercel.app/api';
   }
 
   async getFlags(): Promise<LaunchDarklyFlag[]> {
     try {
-      const response = await fetch(`${this.baseApiUrl}?projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}`, {
+      const response = await fetch(`${this.baseApiUrl}/launchdarkly?projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}`, {
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -62,7 +81,7 @@ class LaunchDarklyService {
 
   async getFlag(key: string): Promise<LaunchDarklyFlag> {
     try {
-      const response = await fetch(`${this.baseApiUrl}?projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}&flagKey=${encodeURIComponent(key)}`, {
+      const response = await fetch(`${this.baseApiUrl}/launchdarkly?projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}&flagKey=${encodeURIComponent(key)}`, {
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -92,6 +111,65 @@ class LaunchDarklyService {
       return flag.variations;
     } catch (error) {
       console.error(`Error fetching variations for flag ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async getFlagPreview(flagKey: string, variationIndex: number): Promise<ContentPreview> {
+    try {
+      const response = await fetch(`${this.baseApiUrl}/flagPreview?flagKey=${encodeURIComponent(flagKey)}&variationIndex=${variationIndex}&projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const error: any = await response.json();
+        throw new Error(`Flag Preview API Error: ${error.message || response.statusText}`);
+      }
+
+      const preview: ContentPreview = await response.json();
+      return preview;
+    } catch (error) {
+      console.error('Error fetching flag preview:', error);
+      throw error;
+    }
+  }
+
+  async getContentMappings(entryId: string): Promise<ContentMapping[]> {
+    try {
+      const response = await fetch(`${this.baseApiUrl}/contentMappings?entryId=${encodeURIComponent(entryId)}&projectKey=${encodeURIComponent(this.projectKey)}&environment=${encodeURIComponent(this.environment)}`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const error: any = await response.json();
+        throw new Error(`Content Mappings API Error: ${error.message || response.statusText}`);
+      }
+
+      const mappings: ContentMapping[] = await response.json();
+      return mappings;
+    } catch (error) {
+      console.error('Error fetching content mappings:', error);
+      throw error;
+    }
+  }
+
+  async saveContentMapping(mapping: ContentMapping): Promise<ContentMapping> {
+    try {
+      const response = await fetch(`${this.baseApiUrl}/contentMappings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mapping),
+      });
+
+      if (!response.ok) {
+        const error: any = await response.json();
+        throw new Error(`Save Content Mapping Error: ${error.message || response.statusText}`);
+      }
+
+      const savedMapping: ContentMapping = await response.json();
+      return savedMapping;
+    } catch (error) {
+      console.error('Error saving content mapping:', error);
       throw error;
     }
   }
@@ -140,6 +218,39 @@ class LaunchDarklyService {
   getMockVariations(flagKey: string): LaunchDarklyVariation[] {
     const flag = this.getMockFlags().find(f => f.key === flagKey);
     return flag ? flag.variations : [];
+  }
+
+  // Mock content mapping methods for development
+  getMockContentMappings(entryId: string): ContentMapping[] {
+    return [
+      {
+        entryId,
+        contentType: 'page',
+        flagKey: 'welcome-message',
+        variationIndex: 1,
+        variationValue: 'Welcome back!',
+        lastUpdated: new Date().toISOString()
+      },
+      {
+        entryId,
+        contentType: 'page',
+        flagKey: 'feature-banner',
+        variationIndex: 0,
+        variationValue: false,
+        lastUpdated: new Date().toISOString()
+      }
+    ];
+  }
+
+  async saveMockContentMapping(mapping: ContentMapping): Promise<ContentMapping> {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Return the mapping with a timestamp
+    return {
+      ...mapping,
+      lastUpdated: new Date().toISOString()
+    };
   }
 }
 

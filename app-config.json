@@ -1,6 +1,6 @@
 {
   "name": "LaunchDarkly Flag Variation Field",
-  "host": "https://launchdarkly-contentstack-app.vercel.app",
+  "host": "http://localhost:3000",
   "description": "Custom field extension for mapping Contentstack entries to LaunchDarkly flag variations",
   "version": "1.0.0",
   "author": "Your Name",
@@ -21,12 +21,37 @@
       {
         "title": "LaunchDarkly Flag Variation",
         "uid": "launchdarkly_flag_variation",
+        "src": "/index.html",
         "data_type": "json",
         "description": "Map this entry to a LaunchDarkly flag variation",
         "config": {
           "label": "LaunchDarkly Flag Variation",
           "placeholder": "Select a flag and variation"
+        },
+        "multiple": false,
+        "required": false,
+        "unique": false,
+        "editable": true,
+        "display_type": "text",
+        "field_metadata": {
+          "mandatory": false,
+          "unique": false,
+          "localizable": false,
+          "multiple": false
+        },
+        "field_type": "custom_field",
+        "field_validation": {
+          "required": false,
+          "unique": false
         }
+      }
+    ],
+    "sidebar_widget": [
+      {
+        "title": "LaunchDarkly Integration",
+        "uid": "launchdarkly_sidebar_widget",
+        "src": "/index.html",
+        "description": "View and manage LaunchDarkly feature flags for this entry"
       }
     ],
     "config_screen": [
@@ -39,15 +64,7 @@
     ]
   },
   "framework": "react",
-  "entry": "flag-selector.html",
-  "oauth": {
-    "client_id": "your-client-id",
-    "client_secret": "your-client-secret",
-    "scopes": [
-      "cm.content-type:read",
-      "cm.content-types.management:read"
-    ]
-  },
+  "entry": "index.html",
   "webhooks": [],
   "functions": [],
   "config": {
@@ -56,5 +73,13 @@
       "environment": "production",
       "base_url": "https://app.launchdarkly.com/api/v2"
     }
-  }
-} 
+  },
+  "oauth": {
+    "client_id": "",
+    "client_secret": ""
+  },
+  "targets": [
+    "custom-field",
+    "sidebar-widget"
+  ]
+}
