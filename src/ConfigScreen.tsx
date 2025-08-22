@@ -228,6 +228,16 @@ const ConfigScreen: React.FC = () => {
 
   if (loading) return <div style={{ padding: 16 }}>Loading...</div>;
 
+  // Debug: Check if we're actually rendering
+  console.log('🔍 [ConfigScreen] Rendering component with state:', {
+    loading,
+    sdk: !!sdk,
+    projectKey,
+    environmentKey,
+    apiKey: apiKey ? '***SET***' : '❌ Not set',
+    error
+  });
+
   // Visual test component to show current configuration status
   const renderConfigTestStatus = () => {
     return (
@@ -289,10 +299,12 @@ const ConfigScreen: React.FC = () => {
     );
   };
 
-  return (
-    <div style={{ padding: 16, fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif' }}>
-      <h2 style={{ marginBottom: 12 }}>LaunchDarkly Configuration</h2>
-      {renderConfigTestStatus()}
+  // Add error boundary for rendering
+  try {
+    return (
+      <div style={{ padding: 16, fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif' }}>
+        <h2 style={{ marginBottom: 12 }}>LaunchDarkly Configuration</h2>
+        {renderConfigTestStatus()}
       
       {/* Configuration Input Fields */}
       <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
@@ -630,7 +642,20 @@ const ConfigScreen: React.FC = () => {
         </p>
       </div>
     </div>
-  );
+    );
+  } catch (error) {
+    console.error('❌ [ConfigScreen] Rendering error:', error);
+    return (
+      <div style={{ padding: 16, color: '#b00020', fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif' }}>
+        <h2>Error Rendering Config Screen</h2>
+        <p>An error occurred while rendering the configuration screen:</p>
+        <pre style={{ backgroundColor: '#f8f9fa', padding: 8, borderRadius: 4, fontSize: 12 }}>
+          {error instanceof Error ? error.message : String(error)}
+        </pre>
+        <p>Please check the browser console for more details.</p>
+      </div>
+    );
+  }
 };
 
 export default ConfigScreen; 
