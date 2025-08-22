@@ -15,26 +15,26 @@
       ]
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     },
     {
-      "src": "/config-screen.html",
-      "dest": "/dist/config-screen.html"
+      "source": "/config-screen.html",
+      "destination": "/dist/config-screen.html"
     },
     {
-      "src": "/flag-selector.html",
-      "dest": "/dist/flag-selector.html"
+      "source": "/flag-selector.html",
+      "destination": "/dist/flag-selector.html"
     },
     {
-      "src": "/index.js",
-      "dest": "/dist/index.js"
+      "source": "/index.js",
+      "destination": "/dist/index.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "/dist/index.html"
+      "source": "/(.*)",
+      "destination": "/dist/index.html"
     }
   ]
 }
