@@ -17,16 +17,16 @@
       "destination": "/api/$1"
     },
     {
+      "source": "/index.js",
+      "destination": "/dist/index.js"
+    },
+    {
       "source": "/config-screen.html",
       "destination": "/dist/config-screen.html"
     },
     {
       "source": "/flag-selector.html",
       "destination": "/dist/flag-selector.html"
-    },
-    {
-      "source": "/index.js",
-      "destination": "/dist/index.js"
     },
     {
       "source": "/(.*)",
