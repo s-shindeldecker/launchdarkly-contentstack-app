@@ -1,6 +1,6 @@
 {
   "name": "LaunchDarkly Flag Variation Field",
-  "host": "http://localhost:3000",
+  "host": "https://launchdarkly-contentstack-app.vercel.app",
   "description": "Custom field extension for mapping Contentstack entries to LaunchDarkly flag variations",
   "version": "1.0.0",
   "author": "Your Name",
@@ -79,6 +79,7 @@
     "client_secret": ""
   },
   "targets": [
+    "app-config",
     "custom-field",
     "sidebar-widget"
   ]
