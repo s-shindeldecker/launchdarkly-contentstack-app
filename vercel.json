@@ -6,7 +6,11 @@
       "headers": [
         {
           "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
+          "value": "ALLOW-FROM https://*.contentstack.com https://*.contentstack.io"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.contentstack.com https://*.contentstack.io; style-src 'self' 'unsafe-inline' https://*.contentstack.com https://*.contentstack.io; frame-ancestors 'self' https://*.contentstack.com https://*.contentstack.io; connect-src 'self' https://*.contentstack.com https://*.contentstack.io https://*.launchdarkly.com;"
         }
       ]
     }
