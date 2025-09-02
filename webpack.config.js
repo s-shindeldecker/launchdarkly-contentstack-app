@@ -31,16 +31,19 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './public/index.html',
       filename: 'index.html',
+      inject: true,
     }),
     // New HTML wrapper for Contentstack
     new HtmlWebpackPlugin({
       template: './public/flag-selector.html',
       filename: 'flag-selector.html',
+      inject: true,
     }),
     // Config screen wrapper
     new HtmlWebpackPlugin({
       template: './public/config-screen.html',
       filename: 'config-screen.html',
+      inject: true,
     }),
     // Make environment variables available to the app
     new webpack.DefinePlugin({
