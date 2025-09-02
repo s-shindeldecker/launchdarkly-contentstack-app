@@ -36,7 +36,7 @@
     },
     {
       "source": "/config-screen.html",
-      "destination": "/dist/config-screen.html"
+      "destination": "/public/config-screen-static.html"
     },
     {
       "source": "/flag-selector.html",
