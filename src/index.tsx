@@ -25,17 +25,30 @@ const App: React.FC = () => {
         // Determine the app context based on SDK location
         // Check which location context is available
         let location = null;
+        
+        console.log('🔍 [App] SDK location object:', sdkInstance.location);
+        console.log('🔍 [App] SDK location keys:', sdkInstance.location ? Object.keys(sdkInstance.location) : 'No location');
+        
         if (sdkInstance.location?.SidebarWidget) {
           location = 'SidebarWidget';
+          console.log('✅ [App] Detected SidebarWidget context');
         } else if (sdkInstance.location?.CustomField) {
           location = 'CustomField';
+          console.log('✅ [App] Detected CustomField context');
+          console.log('🔍 [App] CustomField object:', sdkInstance.location.CustomField);
+          console.log('🔍 [App] CustomField keys:', Object.keys(sdkInstance.location.CustomField));
         } else if (sdkInstance.location?.AppConfigWidget) {
           location = 'AppConfigWidget';
+          console.log('✅ [App] Detected AppConfigWidget context');
+        } else {
+          console.log('❌ [App] No recognized location context found');
+          console.log('🔍 [App] Available locations:', sdkInstance.location ? Object.keys(sdkInstance.location) : 'None');
         }
+        
         setSdkLocation(location);
         
         console.log('✅ [App] SDK initialized successfully');
-        console.log('🔍 [App] SDK location:', location);
+        console.log('🔍 [App] Final SDK location:', location);
         
         setLoading(false);
       } catch (error) {
