@@ -29,22 +29,6 @@
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
-    },
-    {
-      "source": "/index.js",
-      "destination": "/dist/index.js"
-    },
-    {
-      "source": "/config-screen.html",
-      "destination": "/public/config-screen-static.html"
-    },
-    {
-      "source": "/flag-selector.html",
-      "destination": "/dist/flag-selector.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/dist/index.html"
     }
   ]
 }
