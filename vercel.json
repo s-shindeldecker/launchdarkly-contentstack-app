@@ -7,6 +7,18 @@
         {
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.contentstack.com https://*.contentstack.io https://*.csnonprod.com; style-src 'self' 'unsafe-inline' https://*.contentstack.com https://*.contentstack.io https://*.csnonprod.com; frame-ancestors 'self' https://*.contentstack.com https://*.contentstack.io https://*.csnonprod.com; connect-src 'self' https://*.contentstack.com https://*.contentstack.io https://*.csnonprod.com https://*.launchdarkly.com;"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
         }
       ]
     }
