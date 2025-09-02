@@ -47,6 +47,15 @@ const App: React.FC = () => {
         
         setSdkLocation(location);
         
+        // Add extensionEvent handler for Contentstack communication
+        if (sdkInstance.postRobot) {
+          sdkInstance.postRobot.on('extensionEvent', (data: any) => {
+            console.log('🔧 [App] Received extensionEvent:', data);
+            // Handle extension events from Contentstack
+            // This prevents the "No handler found for post message: extensionEvent" error
+          });
+        }
+        
         console.log('✅ [App] SDK initialized successfully');
         console.log('🔍 [App] Final SDK location:', location);
         

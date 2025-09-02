@@ -36,6 +36,7 @@ const FlagVariationField = () => {
   const [usingMockData, setUsingMockData] = useState(false);
   const [sdkInitialized, setSdkInitialized] = useState(false);
   const [installationParams, setInstallationParams] = useState<InstallationParams>({});
+  const [savedData, setSavedData] = useState<any>(null);
 
   // 2. ALL useEffect hooks second - always called in same order
   useEffect(() => {
@@ -119,20 +120,34 @@ const FlagVariationField = () => {
         }
         
         // Method 2: Try AppConfigWidget.installation.getInstallationData() if available (config screen context only)
-        if (!rawParams && sdkInstance.location?.AppConfigWidget?.installation) {
+        // Always try this method to get complete configuration including API key
+        if (sdkInstance.location?.AppConfigWidget?.installation) {
           try {
             const installationData = await sdkInstance.location.AppConfigWidget.installation.getInstallationData();
             console.log("🔧 [SDK] AppConfigWidget installation data:", installationData);
             
             // Extract configuration from both configuration and serverConfiguration
-            rawParams = {
+            const appConfigData = {
               launchdarkly: {
                 apiKey: installationData?.serverConfiguration?.apiKey || '',
                 projectKey: installationData?.configuration?.projectKey || '',
                 environmentKey: installationData?.configuration?.environmentKey || ''
               }
             };
-            console.log("🔧 [SDK] Extracted from AppConfigWidget:", rawParams);
+            console.log("🔧 [SDK] Extracted from AppConfigWidget:", appConfigData);
+            
+            // Merge with existing rawParams if available
+            if (rawParams) {
+              rawParams = {
+                ...rawParams,
+                launchdarkly: {
+                  ...rawParams.launchdarkly,
+                  ...appConfigData.launchdarkly
+                }
+              };
+            } else {
+              rawParams = appConfigData;
+            }
           } catch (e) {
             console.log("❌ [SDK] AppConfigWidget.getInstallationData() failed:", e);
           }
@@ -1002,8 +1017,6 @@ const FlagVariationField = () => {
                      typeof sdk.location.CustomField.field.setData === 'function';
   
   // Try to load saved data even in read-only mode
-  const [savedData, setSavedData] = useState<any>(null);
-  
   useEffect(() => {
     if (sdk?.location?.CustomField?.field && !isEditMode) {
       try {
