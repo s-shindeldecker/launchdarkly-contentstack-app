@@ -35,25 +35,29 @@ module.exports = {
       template: './public/index.html',
       filename: 'index.html',
       inject: true,
+      chunks: ['main'],
     }),
     // New HTML wrapper for Contentstack
     new HtmlWebpackPlugin({
       template: './public/flag-selector.html',
       filename: 'flag-selector.html',
       inject: true,
+      chunks: ['main'],
     }),
-    // Config screen wrapper
+    // Config screen wrapper - ONLY load main chunk to avoid event listener conflicts
     new HtmlWebpackPlugin({
       template: './public/config-screen.html',
       filename: 'config-screen.html',
       inject: true,
+      chunks: ['main'],
     }),
-    // Custom field wrapper
+    // Custom field wrapper - ONLY load customField chunk
     new HtmlWebpackPlugin({
       template: './public/custom-field.html',
       filename: 'custom-field.html',
-      inject: false,
+      inject: true,
       chunks: ['customField'],
+      scriptLoading: 'defer',
     }),
     // Make environment variables available to the app
     new webpack.DefinePlugin({

@@ -37,12 +37,7 @@ const CustomFieldApp: React.FC = () => {
           console.log('🔍 [CustomField] Available locations:', sdkInstance.location ? Object.keys(sdkInstance.location) : 'None');
         }
         
-        // Add extensionEvent handler for Contentstack communication
-        if (sdkInstance.postRobot) {
-          sdkInstance.postRobot.on('extensionEvent', (data: any) => {
-            console.log('🔧 [CustomField] Received extensionEvent:', data);
-          });
-        }
+        // Note: Removed post-robot event listener to prevent conflicts with config screen
         
         setLoading(false);
       } catch (error) {
