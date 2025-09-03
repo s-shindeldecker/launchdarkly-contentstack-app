@@ -26,9 +26,10 @@ const SimpleFlagField: React.FC = () => {
         
         try {
           config = await sdkInstance.getConfig();
-          console.log('🔧 [SimpleFlagField] Config retrieved:', config);
-          console.log('🔧 [SimpleFlagField] Config type:', typeof config);
-          console.log('🔧 [SimpleFlagField] Config keys:', config ? Object.keys(config) : 'null');
+                  console.log('🔧 [SimpleFlagField] Config retrieved:', config);
+        console.log('🔧 [SimpleFlagField] Config type:', typeof config);
+        console.log('🔧 [SimpleFlagField] Config keys:', config ? Object.keys(config) : 'null');
+        console.log('🔧 [SimpleFlagField] Full config object:', JSON.stringify(config, null, 2));
         } catch (e) {
           console.log('⚠️ [SimpleFlagField] getConfig failed, trying AppConfigWidget...');
         }
@@ -38,6 +39,7 @@ const SimpleFlagField: React.FC = () => {
           try {
             const installationData = await sdkInstance.location.AppConfigWidget.installation.getInstallationData();
             console.log('🔧 [SimpleFlagField] AppConfigWidget installation data:', installationData);
+            console.log('🔧 [SimpleFlagField] AppConfigWidget full data:', JSON.stringify(installationData, null, 2));
             
             // Extract API key from serverConfiguration
             apiKeyFromAppConfig = installationData?.serverConfiguration?.apiKey || '';
@@ -78,6 +80,11 @@ const SimpleFlagField: React.FC = () => {
           apiKey: apiKey ? '***SET***' : '❌ Not set',
           projectKey: projectKey || '❌ Not set',
           environmentKey: environmentKey || '❌ Not set'
+        });
+        console.log('🔧 [SimpleFlagField] Raw values:', {
+          apiKey: apiKey,
+          projectKey: projectKey,
+          environmentKey: environmentKey
         });
         
         // Create LaunchDarkly service
