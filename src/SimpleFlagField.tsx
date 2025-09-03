@@ -22,35 +22,57 @@ const SimpleFlagField: React.FC = () => {
         
         // Get configuration from SDK
         let config = null;
+        let apiKeyFromAppConfig = '';
+        
         try {
           config = await sdkInstance.getConfig();
           console.log('🔧 [SimpleFlagField] Config retrieved:', config);
+          console.log('🔧 [SimpleFlagField] Config type:', typeof config);
+          console.log('🔧 [SimpleFlagField] Config keys:', config ? Object.keys(config) : 'null');
         } catch (e) {
           console.log('⚠️ [SimpleFlagField] getConfig failed, trying AppConfigWidget...');
-          
-          // Try AppConfigWidget if available
-          if (sdkInstance.location?.AppConfigWidget?.installation) {
-            try {
-              const installationData = await sdkInstance.location.AppConfigWidget.installation.getInstallationData();
+        }
+        
+        // Always try AppConfigWidget to get the API key (stored in serverConfiguration)
+        if (sdkInstance.location?.AppConfigWidget?.installation) {
+          try {
+            const installationData = await sdkInstance.location.AppConfigWidget.installation.getInstallationData();
+            console.log('🔧 [SimpleFlagField] AppConfigWidget installation data:', installationData);
+            
+            // Extract API key from serverConfiguration
+            apiKeyFromAppConfig = installationData?.serverConfiguration?.apiKey || '';
+            console.log('🔧 [SimpleFlagField] API key from AppConfigWidget:', apiKeyFromAppConfig ? '***SET***' : '❌ Not set');
+            
+            // If we don't have config from getConfig, use AppConfigWidget data
+            if (!config) {
               config = {
-                launchdarkly: {
-                  apiKey: installationData?.serverConfiguration?.apiKey || '',
-                  projectKey: installationData?.configuration?.projectKey || '',
-                  environmentKey: installationData?.configuration?.environmentKey || 'production'
-                }
+                apiKey: apiKeyFromAppConfig,
+                projectKey: installationData?.configuration?.projectKey || '',
+                environmentKey: installationData?.configuration?.environmentKey || 'production'
               };
-              console.log('🔧 [SimpleFlagField] AppConfigWidget config:', config);
-            } catch (e2) {
-              console.log('⚠️ [SimpleFlagField] AppConfigWidget also failed');
+              console.log('🔧 [SimpleFlagField] Using AppConfigWidget config:', config);
             }
+          } catch (e2) {
+            console.log('⚠️ [SimpleFlagField] AppConfigWidget also failed');
           }
         }
         
-        // Extract LaunchDarkly configuration
-        const launchdarkly = config?.launchdarkly || {};
-        const apiKey = launchdarkly.apiKey || '';
-        const projectKey = launchdarkly.projectKey || '';
-        const environmentKey = launchdarkly.environmentKey || 'production';
+        // Extract LaunchDarkly configuration - handle both formats
+        let apiKey = apiKeyFromAppConfig; // Start with API key from AppConfigWidget
+        let projectKey = '';
+        let environmentKey = 'production';
+        
+        if (config?.launchdarkly) {
+          // Format 1: {launchdarkly: {projectKey: '...', environmentKey: '...'}}
+          apiKey = apiKey || config.launchdarkly.apiKey || '';
+          projectKey = config.launchdarkly.projectKey || '';
+          environmentKey = config.launchdarkly.environmentKey || 'production';
+        } else if (config?.projectKey || config?.environmentKey) {
+          // Format 2: {projectKey: '...', environmentKey: '...'} (direct format)
+          apiKey = apiKey || config.apiKey || '';
+          projectKey = config.projectKey || '';
+          environmentKey = config.environmentKey || 'production';
+        }
         
         console.log('🔧 [SimpleFlagField] LaunchDarkly config:', {
           apiKey: apiKey ? '***SET***' : '❌ Not set',
