@@ -108,11 +108,24 @@ const FlagVariationField = () => {
           console.log("🔧 [SDK] getConfig() type:", typeof rawParams);
           console.log("🔧 [SDK] getConfig() keys:", rawParams ? Object.keys(rawParams) : 'null/undefined');
           
-          // Check if getConfig returned the installation configuration
+          // Log the full configuration structure for debugging
           if (rawParams && typeof rawParams === 'object') {
+            console.log("🔧 [SDK] Full configuration object:", JSON.stringify(rawParams, null, 2));
             console.log("🔧 [SDK] getConfig() has launchdarkly config:", !!rawParams.launchdarkly);
             if (rawParams.launchdarkly) {
               console.log("🔧 [SDK] getConfig() launchdarkly keys:", Object.keys(rawParams.launchdarkly));
+              console.log("🔧 [SDK] getConfig() launchdarkly values:", rawParams.launchdarkly);
+            }
+            
+            // Check for alternative configuration structures
+            console.log("🔧 [SDK] Checking for alternative config structures:");
+            console.log("🔧 [SDK] Has 'configuration' key:", !!rawParams.configuration);
+            console.log("🔧 [SDK] Has 'serverConfiguration' key:", !!rawParams.serverConfiguration);
+            if (rawParams.configuration) {
+              console.log("🔧 [SDK] configuration keys:", Object.keys(rawParams.configuration));
+            }
+            if (rawParams.serverConfiguration) {
+              console.log("🔧 [SDK] serverConfiguration keys:", Object.keys(rawParams.serverConfiguration));
             }
           }
         } catch (e) {
@@ -179,11 +192,37 @@ const FlagVariationField = () => {
           processedParams = null;
         }
         
+        // Try to extract configuration from different possible structures
+        let extractedApiKey = '';
+        let extractedProjectKey = '';
+        let extractedEnvironmentKey = 'production';
+        
+        if (processedParams) {
+          // Structure 1: Direct launchdarkly object
+          if (processedParams.launchdarkly) {
+            extractedApiKey = processedParams.launchdarkly.apiKey || '';
+            extractedProjectKey = processedParams.launchdarkly.projectKey || '';
+            extractedEnvironmentKey = processedParams.launchdarkly.environmentKey || 'production';
+          }
+          // Structure 2: Direct properties
+          else if (processedParams.apiKey || processedParams.projectKey) {
+            extractedApiKey = processedParams.apiKey || '';
+            extractedProjectKey = processedParams.projectKey || '';
+            extractedEnvironmentKey = processedParams.environmentKey || 'production';
+          }
+          // Structure 3: AppConfigWidget structure (configuration + serverConfiguration)
+          else if (processedParams.configuration || processedParams.serverConfiguration) {
+            extractedApiKey = processedParams.serverConfiguration?.apiKey || '';
+            extractedProjectKey = processedParams.configuration?.projectKey || '';
+            extractedEnvironmentKey = processedParams.configuration?.environmentKey || 'production';
+          }
+        }
+        
         const params: InstallationParams = {
           launchdarkly: {
-            apiKey: processedParams?.launchdarkly?.apiKey || processedParams?.apiKey || '',
-            projectKey: processedParams?.launchdarkly?.projectKey || processedParams?.projectKey || '',
-            environmentKey: processedParams?.launchdarkly?.environmentKey || processedParams?.environmentKey || 'production'
+            apiKey: extractedApiKey,
+            projectKey: extractedProjectKey,
+            environmentKey: extractedEnvironmentKey
           }
         };
         
@@ -199,20 +238,20 @@ const FlagVariationField = () => {
         
         // Extract LaunchDarkly configuration from installation parameters
         const { launchdarkly } = params;
-        let projectKey = launchdarkly?.projectKey || '';
-        let environmentKey = launchdarkly?.environmentKey || 'production';
-        let apiKey = launchdarkly?.apiKey || '';
+        let finalProjectKey = launchdarkly?.projectKey || '';
+        let finalEnvironmentKey = launchdarkly?.environmentKey || 'production';
+        let finalApiKey = launchdarkly?.apiKey || '';
         
         // Remove process.env fallbacks since they don't exist in browser
         // These would only work in a Node.js environment
         console.log("🔧 [FINAL] LaunchDarkly Configuration:");
-        console.log("🔍 Final API Key:", apiKey || "❌ Not set");
-        console.log("🔍 Final Project Key:", projectKey || "❌ Not set");
-        console.log("🔍 Final Environment Key:", environmentKey || "❌ Not set");
+        console.log("🔍 Final API Key:", finalApiKey || "❌ Not set");
+        console.log("🔍 Final Project Key:", finalProjectKey || "❌ Not set");
+        console.log("🔍 Final Environment Key:", finalEnvironmentKey || "❌ Not set");
         
         // Create LaunchDarkly service with the configuration
-        if (projectKey && apiKey) {
-          const ldService = new LaunchDarklyService(apiKey, projectKey, environmentKey);
+        if (finalProjectKey && finalApiKey) {
+          const ldService = new LaunchDarklyService(finalApiKey, finalProjectKey, finalEnvironmentKey);
           setLdService(ldService);
           console.log("✅ [SDK] LaunchDarkly service created with real configuration");
         } else {
