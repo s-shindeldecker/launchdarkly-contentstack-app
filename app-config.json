@@ -21,7 +21,7 @@
       {
         "title": "LaunchDarkly Flag Variation",
         "uid": "launchdarkly_flag_variation",
-        "src": "/index.html",
+        "src": "/custom-field.html",
         "data_type": "json",
         "description": "Map this entry to a LaunchDarkly flag variation",
         "config": {

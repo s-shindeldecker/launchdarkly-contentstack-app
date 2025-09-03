@@ -4,10 +4,13 @@ const webpack = require('webpack');
 require('dotenv').config();
 
 module.exports = {
-  entry: './src/index.tsx',
+  entry: {
+    main: './src/index.tsx',
+    customField: './src/customFieldEntry.tsx',
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'index.js',
+    filename: '[name].js',
     clean: true,
   },
   resolve: {
@@ -44,6 +47,13 @@ module.exports = {
       template: './public/config-screen.html',
       filename: 'config-screen.html',
       inject: true,
+    }),
+    // Custom field wrapper
+    new HtmlWebpackPlugin({
+      template: './public/custom-field.html',
+      filename: 'custom-field.html',
+      inject: false,
+      chunks: ['customField'],
     }),
     // Make environment variables available to the app
     new webpack.DefinePlugin({
