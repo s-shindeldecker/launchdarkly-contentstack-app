@@ -4,10 +4,30 @@ import ContentstackAppSdk from '@contentstack/app-sdk';
 import FlagVariationField from './FlagVariationField';
 import './styles.css';
 
+// Add immediate logging to see if the script loads
+console.log('🚀 [CustomField] Script loaded - customFieldEntry.tsx starting...');
+
+// Add global error handler to catch any JavaScript errors
+window.addEventListener('error', (event) => {
+  console.error('❌ [CustomField] Global error caught:', event.error);
+  console.error('❌ [CustomField] Error details:', {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno
+  });
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('❌ [CustomField] Unhandled promise rejection:', event.reason);
+});
+
 const CustomFieldApp: React.FC = () => {
   const [sdk, setSdk] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  console.log('🚀 [CustomField] CustomFieldApp component created');
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -91,5 +111,15 @@ const CustomFieldApp: React.FC = () => {
   return <FlagVariationField />;
 };
 
-const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
-root.render(<CustomFieldApp />);
+console.log('🚀 [CustomField] About to create React root...');
+const rootElement = document.getElementById('root');
+console.log('🚀 [CustomField] Root element found:', !!rootElement);
+
+if (rootElement) {
+  const root = ReactDOM.createRoot(rootElement);
+  console.log('🚀 [CustomField] React root created, rendering app...');
+  root.render(<CustomFieldApp />);
+  console.log('🚀 [CustomField] App rendered successfully');
+} else {
+  console.error('❌ [CustomField] Root element not found!');
+}
